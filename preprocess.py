@@ -23,13 +23,11 @@ def create_interests_json():
             sub_ct += 1
         else:
             grp_ct += 1
-            sub_ct = 1
             interest_dict[i] = grp_ct * 100 + sub_ct
             s = grp
     
     with open ('./data/interests.json', 'w', encoding='utf-8') as f:
         json.dump(interest_dict, f, indent=4, ensure_ascii=False)
-
 
 if(not os.path.exists('./data/interests.json')):
     create_interests_json()
