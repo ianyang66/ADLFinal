@@ -69,3 +69,12 @@ def get_train_data_labels():
         bought_courses_tensor.append(bought_courses + [-1] * (64 - len(bought_courses)))
     bought_courses_tensor = torch.tensor(bought_courses_tensor).to(device)
     return bought_courses_tensor
+
+def create_user_list_json():
+    train_data = pd.read_csv('./data/train.csv')
+    user_list = train_data['user_id'].to_list()
+    user_dict = {}
+    for i, users in enumerate(user_list):
+        user_dict[users] = str(i)
+    with open ('./data/user_list.json', 'w', encoding='utf-8') as f:
+        json.dump(user_dict, f, indent=4, ensure_ascii=False)

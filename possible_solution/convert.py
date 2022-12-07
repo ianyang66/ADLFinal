@@ -27,6 +27,9 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 train_data = pd.read_csv('data/train.csv')
 val_data = pd.read_csv('data/val_seen.csv')
+with open('data/user_list.json', 'r', encoding='utf-8') as f:
+    user_list = json.load(f)
+
 
 def generate_txt(data):
     with open('data/interests.json', 'r', encoding='utf-8') as f:
@@ -51,7 +54,7 @@ def generate_txt(data):
 
     print(bought_courses_list[:10])
     interest_id = list(interests.values())
-    interest_id.remove(0)
+    interest_id.remove(-1)
 
 
     def get_relation_score(sample, course_num):
@@ -70,15 +73,22 @@ def generate_txt(data):
         series = random.randint(6, 15)
 
         for course in course_num:
-            s += (str(idx) + '\t' + str(course) + '\t5\t98765432\n')
+            s += (user_list[user_id] + '\t' + str(course) + '\t5\t98765432\n')
         m = max(series - len(course_num), 5)
         sample_choice = random.choices(list(set(interest_id).difference(set(course_num))), k = m)
         for samples in sample_choice:
-            s += (str(idx) + '\t' + str(samples) + '\t' + get_relation_score(samples, course_num) + '\t98765432\n')
+            s += (user_list[user_id] + '\t' + str(samples) + '\t' + get_relation_score(samples, course_num) + '\t98765432\n')
     return s
 
-with open('./possible_solution/hahow-100k-train.txt', 'w', encoding='utf-8') as f:
-    f.write(generate_txt(train_data))
-with open('./possible_solution/hahow-100k-val-seen.txt', 'w', encoding='utf-8') as f:
-    f.write(generate_txt(val_data))
+def generate_test_txt():
+    test_data = pd.read_csv('./data/test_seen.csv', encoding='utf-8')
+    user_to_idx = ''
+    for user in test_data['user_id'].to_list():
+        user_to_idx += user_list[user] + '\n'
+    with open('./possible_solution/hahow-100k-test.txt', 'w', encoding='utf-8') as f:
+        f.write(user_to_idx)
+# with open('./possible_solution/hahow-100k-train.txt', 'w', encoding='utf-8') as f:
+#     f.write(generate_txt(train_data))
+# with open('./possible_solution/hahow-100k-val-seen.txt', 'w', encoding='utf-8') as f:
+#     f.write(generate_txt(val_data))
    
