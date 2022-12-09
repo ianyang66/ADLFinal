@@ -92,3 +92,16 @@ def generate_test_txt():
 # with open('./possible_solution/hahow-100k-val-seen.txt', 'w', encoding='utf-8') as f:
 #     f.write(generate_txt(val_data))
    
+
+def convert_interests_to_subgroups(interest_num):
+    with open('data/interests.json', 'r', encoding='utf-8') as f:
+        interests = json.load(f)
+    subgroups = pd.read_csv('data/subgroups.csv')
+    
+    _, sub = list(interests.keys())[(int(interest_num) %100 + 4) % 88].split('_')
+    print(sub)
+    return(subgroups.loc[subgroups['subgroup_name'] == sub].to_numpy()[0][0])
+
+print(convert_interests_to_subgroups(84))
+def generate_submit():
+    subgroup_result = pd.read_csv('./possible_solution/subgroup.csv')
