@@ -55,15 +55,18 @@ def generate_txt(data):
 
 
     for id, user_sub in zip(user_ids, subgroups):
-        series = random.randint(6, 15)
+        #series = random.randint(6, 15)
         user_sub = user_sub.split(' ')
         for sub in user_sub:
-            s += (user_list[id] + '\t' + str(sub) + '\t5\t98765432\n')
-        m = min(series - len(user_sub), 3 * len(user_sub))
-        x = [int(i) for i in [str(x) for x in range(92)] if i not in user_sub]
-        sample_choice = random.choices(x, k = m)
-        for samples in sample_choice:
-            s += (str(user_list[id]) + '\t' + str(samples) + '\t' + get_relation_score(samples, user_sub) + '\t98765432\n')
+            if(sub == '0'):
+                s += (user_list[id] + '\t' + '8' + '\t1\t98765432\n')
+            else:
+                s += (user_list[id] + '\t' + str(sub) + '\t1\t98765432\n')
+        #m = min(series - len(user_sub), 3 * len(user_sub))
+        #x = [int(i) for i in [str(x) for x in range(92)] if i not in user_sub]
+        #sample_choice = random.choices(x, k = m)
+        #for samples in sample_choice:
+            #s += (str(user_list[id]) + '\t' + str(samples) + '\t' + get_relation_score(samples, user_sub) + '\t98765432\n')
     return s
 
 def generate_test_txt():
@@ -81,14 +84,13 @@ def generate_test_txt():
    
 
 def generate_submit():
-    subgroup_result = pd.read_csv('./possible_solution/subgroup.csv')['subgroup'].to_list()
+    subgroup_result = pd.read_csv('./possible_solution/pre_subgroup.csv')['subgroup'].to_list()
     group = pd.read_csv('./data/test_seen_group.csv')['user_id'].to_list()
 
     s = 'user_id,subgroup\n'
     for user in group:
-        s += user +',' + (subgroup_result[int(user_list[user])]) + '\n'
-    with open('./possible_solution/submit.csv', 'w') as f:
+        s += user +',' + (' '.join([str(int(x) + 1) for x in subgroup_result[int(user_list[user])].split(' ')])) + '\n'
+    with open('./possible_solution/submit_seen.csv', 'w') as f:
         f.write(s)
-
 
 generate_submit()
