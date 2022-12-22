@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import json
 
 # 'train' or 'val'
 def prepare_df(train_val):
@@ -11,22 +12,17 @@ def prepare_df(train_val):
 
 def get_data(train_val):
     subgroup_csv = pd.read_csv('./data/subgroups.csv')
-    courses_csv = pd.read_csv('./data/courses.csv').fillna('')
     df = prepare_df(train_val)
     bought_course_onehot = np.zeros((len(df), len(subgroup_csv)))
-
-    course_err = []
+    with open('./data/course_subgroup_idx.json') as f:
+        cs_idx_dict = json.load(f)
     for i, course_lst in enumerate(df['course_id']):
         for course in course_lst.split(' '):
-            course_sub = courses_csv.loc[courses_csv['course_id'] == course, 'sub_groups'].iloc[0]
-            if(course_sub == ''):
+            course_sub = cs_idx_dict[course]
+            if(course_sub == []):
                 continue
-            for sub in course_sub.split(','):
-                try:
-                    bought_course_onehot[i][subgroup_csv.loc[subgroup_csv['subgroup_name'] == sub, 'subgroup_id'].iloc[0] - 1] = 1
-                except IndexError:
-                    if(sub not in course_err):
-                        course_err.append(sub)
+            for sub in course_sub:
+                bought_course_onehot[i][sub] = 1
 
     subgroup_dict = {}
     for i, sub_name in enumerate(subgroup_csv['subgroup_name']):
@@ -44,5 +40,7 @@ def get_data(train_val):
                 if(interest_sub not in interest_err):
                     interest_err.append(interest_sub)
 
-    data = {'user_id': df['user_id'].to_numpy(), 'input': self_interest_onehot, 'label': bought_course_onehot}
+    data = []
+    for id, input, label in zip(df['user_id'].to_numpy(), self_interest_onehot, bought_course_onehot):
+        data.append({'user_id':id, 'input':input, 'label':label})
     return data
