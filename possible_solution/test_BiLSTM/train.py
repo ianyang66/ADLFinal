@@ -8,12 +8,14 @@ import os
 from tqdm.auto import trange
 from torch.utils.data import Dataset
 from typing import Dict
+import numpy as np
 
 sys.path.insert(0, os.path.realpath(os.getcwd() + '/possible_solution/'))
 from getOneHot import get_data
 
 NUM_SUBGROUP = 91
 NUM_COURSES = 728
+TOP_K = 30
 
 torch.manual_seed(55)
 class SubgroupDataset(Dataset):
@@ -21,7 +23,6 @@ class SubgroupDataset(Dataset):
         self.data = data
 
     def __len__(self) -> int:
-
         return len(self.data)
 
     def __getitem__(self, index) -> Dict:
@@ -38,21 +39,22 @@ class SubgroupPredictions(nn.Module):
         self,
         hidden_size: int,
         num_layers: int,
-        dropout: float,
+        #dropout: float,
     ) -> None:
         super(SubgroupPredictions, self).__init__()
         self.lstm = nn.LSTM(NUM_SUBGROUP, 
                     hidden_size,
                     bidirectional=True,
-                    dropout=dropout, 
                     num_layers=num_layers)
         self.relu = nn.ReLU()
+        self.softmax = nn.Softmax(dim=1)
         self.linear = nn.Linear(2*hidden_size, NUM_SUBGROUP)
         #self.dropout = nn.Dropout(0.5)
 
-    def forward(self, batch) -> Dict[str, torch.Tensor]:
+    def forward(self, batch) -> torch.Tensor:
         out, (h, c) = self.lstm(batch)
         out = self.linear(out)
+        out = self.softmax(out)
         return out
 
 def main(args):
@@ -65,15 +67,14 @@ def main(args):
     eval_dl = DataLoader(dataset=eval_dataset, batch_size=args.batch_size, shuffle=False, collate_fn=eval_dataset.collate_fn)
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    model = SubgroupPredictions(hidden_size=args.hidden_size, num_layers=args.num_layers, dropout=args.dropout).to(device)
+    model = SubgroupPredictions(hidden_size=args.hidden_size, num_layers=args.num_layers).to(device)
     optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr)
-    criterion = nn.CrossEntropyLoss()
+    criterion = nn.BCEWithLogitsLoss()
     epoch_pbar = trange(args.num_epoch, desc="Epoch")
    
     for epoch in epoch_pbar:
         model.train()
         epoch_loss = 0
-        correct = 0
         train_total = 0
 
         for id, inputs, labels in train_dl:
@@ -86,43 +87,53 @@ def main(args):
             optimizer.step()
 
             epoch_loss += loss.item()
-            predicted = torch.argmax(outputs.data)
+            # predicted = torch.argsort(outputs.data, axis=1, descending=True)
 
-            #TODO
-            correct += (predicted == labels).sum().item()
-            train_total += labels.size(0)
+
 
         print('Epoch {}'.format(epoch))
-        print("Train accuracy: {:.3f}".format(correct / train_total))
-        print("Train total Loss: {:.3f}".format(epoch_loss))
+        print("Train total Loss: {:.4f}".format(epoch_loss))
 
-        model.eval()
-        eval_correct = 0
-        eval_total = 0
-
-        with torch.no_grad():
-            for id, inputs, labels in eval_dl:
-                inputs, labels = inputs.to(device), labels.to(device)
-                outputs = model(inputs)
+        # model.eval()
+        # best_mapk = 0
+        # pred_lst = []
+        # label_lst = []
+        # with torch.no_grad():
+        #     for id, inputs, labels in eval_dl:
+        #         inputs, labels = inputs.to(device), labels.to(device)
+        #         outputs = model(inputs)
                 
-                predicted = torch.argmax(outputs.data)
+        #         predicted = torch.argsort(outputs.data, axis=1, descending=True)
 
-                eval_correct += (predicted == labels).sum().item()
-                eval_total += labels.size(0)
+            # TRASHzzzzzzzzz
+            #     pred_lst.append(predicted)
+            #     label_lst.append(labels)
 
-            eval_acc = eval_correct / eval_total
-            print("Eval accuracy: {:.3f}\n".format(eval_acc))
+            # pre_mapk = mapk(torch.stack(label_lst), torch.stack(pred_lst), TOP_K)
+            # if(pre_mapk > best_mapk):
+            #     best_mapk = pre_mapk
+            #     torch.save(model.state_dict(), args.ckpt_dir /'lstm.pt')
+            #     print("Saved model at epoch {}".format(epoch))
 
-            if(eval_acc > best_acc):
-                best_acc = eval_acc
-                torch.save(model.state_dict(), args.ckpt_dir /'lstm.pt')
-                print("Saved model at epoch {}\n".format(epoch))
+            #     print(pre_mapk)
 
-
-    print()
-
+        torch.save(model.state_dict(), args.ckpt_dir /'lstm.pt')
 
 
+def apk(actual, predicted, k):
+    if len(predicted)>k:
+        predicted = predicted[:k]
+    score = 0.0
+    num_hits = 0.0
+    for i,p in enumerate(predicted):
+        if p in actual and p not in predicted[:i]:
+            num_hits += 1.0
+            score += num_hits / (i+1.0)
+
+    return score / min(len(actual), k)
+
+def mapk(actual, predicted, k):
+    return np.mean([apk(a,p,k) for a,p in zip(actual, predicted)])
 
 
 def parse_args() -> Namespace:
@@ -136,15 +147,15 @@ def parse_args() -> Namespace:
 
     # model
     parser.add_argument("--hidden_size", type=int, default=512)
-    parser.add_argument("--num_layers", type=int, default=1)
+    parser.add_argument("--num_layers", type=int, default=2)
     parser.add_argument("--dropout", type=float, default=0.5)
 
     # optimizer
     parser.add_argument("--lr", type=float, default=1e-3)
 
     # data loader
-    parser.add_argument("--batch_size", type=int, default=8)
-    parser.add_argument("--num_epoch", type=int, default=200)
+    parser.add_argument("--batch_size", type=int, default=64)
+    parser.add_argument("--num_epoch", type=int, default=100)
 
     args = parser.parse_args()
     return args
