@@ -9,6 +9,7 @@ from tqdm.auto import trange
 from torch.utils.data import Dataset
 from typing import Dict
 import numpy as np
+import transformers
 
 sys.path.insert(0, os.path.realpath(os.getcwd() + '/possible_solution/'))
 from getOneHot import get_data
@@ -18,44 +19,6 @@ NUM_COURSES = 728
 TOP_K = 30
 
 torch.manual_seed(55)
-class SubgroupDataset(Dataset):
-    def __init__(self,data):
-        self.data = data
-
-    def __len__(self) -> int:
-        return len(self.data)
-
-    def __getitem__(self, index) -> Dict:
-        return self.data[index]
-    
-    def collate_fn(self, samples: Dict) -> Dict:
-        id_list = [s['user_id'] for s in samples]
-        input_list = [torch.from_numpy(s['input']).to(torch.float) for s in samples]
-        label_list = [torch.from_numpy(s['label']).to(torch.float)  for s in samples]
-        return id_list,torch.stack(input_list),torch.stack(label_list)
-
-class SubgroupPredictions(nn.Module):
-    def __init__(
-        self,
-        hidden_size: int,
-        num_layers: int,
-        #dropout: float,
-    ) -> None:
-        super(SubgroupPredictions, self).__init__()
-        self.lstm = nn.LSTM(NUM_SUBGROUP, 
-                    hidden_size,
-                    bidirectional=True,
-                    num_layers=num_layers)
-        self.relu = nn.ReLU()
-        self.softmax = nn.Softmax(dim=1)
-        self.linear = nn.Linear(2*hidden_size, NUM_SUBGROUP)
-        #self.dropout = nn.Dropout(0.5)
-
-    def forward(self, batch) -> torch.Tensor:
-        out, (h, c) = self.lstm(batch)
-        out = self.linear(out)
-        out = self.softmax(out)
-        return out
 
 def main(args):
     #user_id, input, label
@@ -75,7 +38,6 @@ def main(args):
     for epoch in epoch_pbar:
         model.train()
         epoch_loss = 0
-        train_total = 0
 
         for id, inputs, labels in train_dl:
             inputs, labels = inputs.to(device), labels.to(device)
@@ -118,6 +80,45 @@ def main(args):
             #     print(pre_mapk)
 
         torch.save(model.state_dict(), args.ckpt_dir /'lstm.pt')
+
+class SubgroupDataset(Dataset):
+    def __init__(self,data):
+        self.data = data
+
+    def __len__(self) -> int:
+        return len(self.data)
+
+    def __getitem__(self, index) -> Dict:
+        return self.data[index]
+    
+    def collate_fn(self, samples: Dict) -> Dict:
+        id_list = [s['user_id'] for s in samples]
+        input_list = [torch.from_numpy(s['input']).to(torch.float) for s in samples]
+        label_list = [torch.from_numpy(s['label']).to(torch.float)  for s in samples]
+        return id_list,torch.stack(input_list),torch.stack(label_list)
+
+class SubgroupPredictions(nn.Module):
+    def __init__(
+        self,
+        hidden_size: int,
+        num_layers: int,
+        #dropout: float,
+    ) -> None:
+        super(SubgroupPredictions, self).__init__()
+        self.lstm = nn.LSTM(NUM_SUBGROUP, 
+                    hidden_size,
+                    bidirectional=True,
+                    num_layers=num_layers)
+        self.relu = nn.ReLU()
+        self.softmax = nn.Softmax(dim=1)
+        self.linear = nn.Linear(2*hidden_size, NUM_SUBGROUP)
+        #self.dropout = nn.Dropout(0.5)
+
+    def forward(self, batch) -> torch.Tensor:
+        out, (h, c) = self.lstm(batch)
+        out = self.linear(out)
+        out = self.softmax(out)
+        return out
 
 
 def apk(actual, predicted, k):
