@@ -1,0 +1,7 @@
+pandas
+csv
+ckip-transformers
+chinese_keybert
+scikit-learn
+seaborn
+beautifulsoup4
