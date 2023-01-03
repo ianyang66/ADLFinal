@@ -1,4 +1,4 @@
-# Final Project - NTU ADL 2022 FALL
+# NTU ADL final report Team 55 - 2022 Fall
 
 Group: 55
 
@@ -12,11 +12,15 @@ Discover the relationship between courses to forecast which ones users will purc
 
 #### Seen User Courses
 
-Run all cells in `seen/Seen_course_prediction.ipynb`
+1. Run all cells in `seen/keyword_gen.ipynb`
+
+2. Run all cells in `seen/Seen_course_prediction.ipynb`
 
 #### Seen User Topics
 
-Run all cells in `seen/Seen_topics_prediction.ipynb`
+1. Run all cells in `seen/keyword_gen.ipynb`, If you have already run it once in Seen User Courses, you don’t need to run it again
+
+2. Run all cells in `seen/Seen_topics_prediction.ipynb`
 
 #### Unseen User Courses
 
@@ -30,10 +34,10 @@ Run all cells in `unseen/Unseen_topic_prediction.ipynb`
 
 | Tasks               | Public Score | Private Score |
 | ------------------- | ------------ | ------------- |
-| Seen User Courses   | 0.13353      |               |
-| Seen User Topics    | 0.31598      |               |
-| Unseen User Courses | 0.11886      |               |
-| Unseen User Topics  | 0.35046      |               |
+| Seen User Courses   | 0.13353      | 0.14085       |
+| Seen User Topics    | 0.31598      | 0.31210       |
+| Unseen User Courses | 0.11886      | 0.12340       |
+| Unseen User Topics  | 0.35046      | 0.36094       |
 
 ## Reference
 
