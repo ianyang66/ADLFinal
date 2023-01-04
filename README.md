@@ -6,7 +6,7 @@ Dataset: Hahow Dataset
 
 ## Objective
 
-Discover the relationship between courses to forecast which ones users will purchase and which course categories they are most interested in.
+Discover the relationship between courses to predict which ones will users purchase and which course categories are they most interested in.
 
 ## Reproduce
 
@@ -18,7 +18,7 @@ Discover the relationship between courses to forecast which ones users will purc
 
 #### Seen User Topics
 
-1. Run all cells in `seen/keyword_gen.ipynb`, If you have already run it once in Seen User Courses, you don’t need to run it again
+1. Run all cells in `seen/keyword_gen.ipynb`, if you have already run it in Seen User Courses, you don’t need to run it again
 
 2. Run all cells in `seen/Seen_topics_prediction.ipynb`
 
@@ -43,7 +43,7 @@ Run all cells in `unseen/Unseen_topic_prediction.ipynb`
 
 [Getting-started-with-a-movie-recommendation-system](https://www.kaggle.com/code/ibtesama/getting-started-with-a-movie-recommendation-system) 
 
-[Movie-Recommendation-System](https://github.com/pankajmahtolia/Movie-Recommendation-System/blob/master/Movie Recomender.ipynb)
+[Movie-Recommendation-System](https://github.com/pankajmahtolia/Movie-Recommendation-System/blob/master/Movie%20Recomender.ipynb)
 
 [Movie-Recommendation-system](https://github.com/AshishTrada/Movie-Recommendation-system/blob/main/RecSystem.ipynb)
 
