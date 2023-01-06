@@ -1,7 +1,10 @@
 pandas
 csv
+pickle
 ckip-transformers
 chinese_keybert
 scikit-learn
 seaborn
 beautifulsoup4
+scipy
+ml_metrics
